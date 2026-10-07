@@ -1,0 +1,153 @@
+// Базовый сброс стилей
+
+// Размеры элементов считаются вместе с padding и border
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// Убираем стандартные отступы браузера
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  // Не даём мобильным браузерам самовольно увеличивать шрифт при повороте экрана
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  // Плавные переходы к якорям, только если пользователь не отключил анимации
+  @media (prefers-reduced-motion: no-preference) {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  min-height: 100dvh;
+  line-height: 1.5;
+  font-family: var(--font-text);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100dvh;
+  background-color: var(--color-beige);
+}
+
+// Заголовки плотнее и без «висячих» коротких строк
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+// Длинные слова и ссылки не ломают вёрстку
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+// Медиа ведут себя как блоки и не вылезают за контейнер
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+// Элементы форм наследуют шрифт вместо системного
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+}
+
+// Списки без маркеров (если маркеры нужны — вернуть локально)
+ul,
+ol {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+// Уважаем системную настройку «уменьшить движение»
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:root {
+  // паддинг
+  --pu-1: 16px;
+  --pu-2: 32px;
+  --pu-3: 48px;
+  --pu-4: 64px;
+  --pu-5: 80px;
+  // маржин
+  --mu-1: 16px;
+  --mu-2: 32px;
+  --mu-3: 48px;
+  --mu-4: 64px;
+  --mu-5: 80px;
+  // цвета
+  --color-beige: #f6f3ec;
+  --color-ink: #1f2430;
+  --color-ink-soft: #343b48;
+  --color-muted: #5b6270;
+  --color-paper: #fff;
+  --color-panel: #efe9dc;
+  --color-line: #ddd6c7;
+  --color-line-strong: #cfc8b8;
+  --color-accent: #c2410c;
+  // шрифты
+  --font-display: 'Literata', Georgia, serif;
+  --font-text: 'IBM Plex Sans', system-ui, sans-serif;
+  // цвета амплуа: фишки и зоны ответственности
+  --role-setter: #e7b43c;
+  --role-outside: #3f6fa8;
+  --role-middle: #3f7d61;
+  --role-opposite: #86529f;
+  --role-libero: #fff;
+}
