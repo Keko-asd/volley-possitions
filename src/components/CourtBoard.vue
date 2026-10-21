@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import VolleyballCourt from '@/components/VolleyballCourt.vue'
 import PlayerMarker from '@/components/PlayerMarker.vue'
 import AttackArrow from '@/components/AttackArrow.vue'
 import OpponentAttackMark from '@/components/OpponentAttackMark.vue'
 import ResponsibilityZone from '@/components/ResponsibilityZone.vue'
 import ZoneTooltip from '@/components/ZoneTooltip.vue'
+import OverlapLine from '@/components/OverlapLine.vue'
 import { PLAYERS, PLAYER_IDS } from '@/data/players'
+import type { OverlapLine as OverlapLineData } from '@/data/overlap'
 import type { PhaseInfo } from '@/data/phases'
 import type { CourtHighlight } from '@/composables/useCourtHighlight'
-import type { OpponentZone, PhaseLayout, PlayerId, Point, Rotation } from '@/types/volleyball'
+import type {
+  OpponentZone,
+  PhaseLayout,
+  PlayerId,
+  Point,
+  ResponsibilityZone as ResponsibilityZoneData,
+  Rotation,
+} from '@/types/volleyball'
 
 // Правая колонка: что сейчас на площадке и сама площадка с зонами.
 const props = defineProps<{
@@ -23,6 +32,8 @@ const props = defineProps<{
   opponentZone: OpponentZone | null
   // Идёт показ перехода из расстановки
   playing: boolean
+  // Приём: линии расстановки для выделенного игрока; на других фазах пусто
+  overlapLines: OverlapLineData[]
 }>()
 
 const emit = defineEmits<{
@@ -35,10 +46,72 @@ const COURT_VIEW: [number, number, number] = [-1.5, -0.6, 12]
 const attackArrows = computed(
   () => Object.entries(props.layout.attacks ?? {}) as [PlayerId, Point][],
 )
+
+// Подсказка по линии расстановки: наведение открывает её временно, клик закрепляет
+const overlapTip = ref<{ index: number; pinned: boolean } | null>(null)
+
+// Линии другого игрока или другой фазы — старая подсказка уже не про то
+watch(
+  () => props.overlapLines,
+  () => {
+    overlapTip.value = null
+  },
+)
+
+// Подсказку ставим у середины линии; подсказка зоны ответственности важнее
+const overlapTipZone = computed(() => {
+  const line = overlapTip.value && props.overlapLines[overlapTip.value.index]
+  const id = props.highlight.shownPlayer
+
+  if (!line || !id || props.highlight.tipZone) {
+    return null
+  }
+
+  const zone: ResponsibilityZoneData = {
+    x: line.axis === 'x' ? line.value : 4.5,
+    y: line.axis === 'y' ? line.value : 4.5,
+    width: 0,
+    height: 0,
+    reason: line.reason,
+  }
+
+  return { player: PLAYERS[id], zone }
+})
+
+// Пока курсор на линии или заливке, зоны игрока не гаснут — как при наведении на его зону
+function startOverlapHover(index: number) {
+  if (props.highlight.shownPlayer) {
+    props.highlight.startHover(props.highlight.shownPlayer)
+  }
+
+  if (!overlapTip.value?.pinned) {
+    overlapTip.value = { index, pinned: false }
+  }
+}
+
+function endOverlapHover() {
+  props.highlight.endHover()
+
+  if (!overlapTip.value?.pinned) {
+    overlapTip.value = null
+  }
+}
+
+function toggleOverlapTip(index: number) {
+  const current = overlapTip.value
+  const same = current?.pinned && current.index === index
+
+  overlapTip.value = same ? null : { index, pinned: true }
+}
+
+function closeTips() {
+  props.highlight.closeTip()
+  overlapTip.value = null
+}
 </script>
 
 <template>
-  <div class="court-board" @keydown.esc="props.highlight.closeTip()">
+  <div class="court-board" @keydown.esc="closeTips()">
     <div class="court-board__head">
       <div class="court-board__title-group">
         <span class="court-board__caption">
@@ -64,6 +137,19 @@ const attackArrows = computed(
     <div class="court-board__frame">
       <div class="court-board__court">
         <VolleyballCourt>
+          <!-- Приём: запретные стороны линий под зонами, чтобы не перекрывать их подсказки -->
+          <OverlapLine
+            v-for="(line, index) in props.overlapLines"
+            :key="`area-${line.neighbor}-${line.axis}`"
+            layer="area"
+            :line="line"
+            :label="PLAYERS[line.neighbor].label"
+            :active="overlapTip?.pinned === true && overlapTip.index === index"
+            @hover-start="startOverlapHover(index)"
+            @hover-end="endOverlapHover()"
+            @select="toggleOverlapTip(index)"
+          />
+
           <!-- Зоны под фишками, чтобы фишки оставались кликабельными -->
           <template v-if="props.highlight.shownPlayer">
             <ResponsibilityZone
@@ -84,6 +170,19 @@ const attackArrows = computed(
               @select="props.highlight.toggleTip(props.highlight.shownPlayer, index)"
             />
           </template>
+
+          <!-- Приём: линии соседей, за которые игрок не заходит до подачи, поверх зон -->
+          <OverlapLine
+            v-for="(line, index) in props.overlapLines"
+            :key="`line-${line.neighbor}-${line.axis}`"
+            layer="line"
+            :line="line"
+            :label="PLAYERS[line.neighbor].label"
+            :active="overlapTip?.pinned === true && overlapTip.index === index"
+            @hover-start="startOverlapHover(index)"
+            @hover-end="endOverlapHover()"
+            @select="toggleOverlapTip(index)"
+          />
 
           <!-- Ключ с точками: при смене расстановки стрелка рисуется заново и снова ждёт игрока -->
           <AttackArrow
@@ -117,6 +216,13 @@ const attackArrows = computed(
           v-if="props.highlight.tipZone"
           :player="PLAYERS[props.highlight.tipZone.id]"
           :zone="props.highlight.tipZone.zone"
+          :view="COURT_VIEW"
+        />
+
+        <ZoneTooltip
+          v-else-if="overlapTipZone"
+          :player="overlapTipZone.player"
+          :zone="overlapTipZone.zone"
           :view="COURT_VIEW"
         />
       </div>

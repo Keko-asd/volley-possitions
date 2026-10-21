@@ -9,6 +9,7 @@ import PhasePicker from '@/components/controls/PhasePicker.vue'
 import PlayerPicker from '@/components/controls/PlayerPicker.vue'
 import { PHASES, RALLY_STARTS, dependsOnStart, getPhaseLayout } from '@/data/phases'
 import { receiveThreeSixBack } from '@/data/schemes/receiveThreeSixBack'
+import { getOverlapLines } from '@/data/overlap'
 import { useCourtHighlight } from '@/composables/useCourtHighlight'
 import { usePhasePlayback } from '@/composables/usePhasePlayback'
 import { useOpponentAttack } from '@/composables/useOpponentAttack'
@@ -46,6 +47,15 @@ const phaseTitle = computed(() => {
 
 const highlight = useCourtHighlight(layout)
 const playback = usePhasePlayback(phase)
+
+// Приём: за чьи центры выделенный игрок не должен заходить до подачи
+const overlapLines = computed(() => {
+  const id = highlight.shownPlayer
+
+  return phase.value === 'receive' && id && !playback.playing.value
+    ? getOverlapLines(receiveThreeSixBack.layouts[rotation.value], id)
+    : []
+})
 
 // Ручной выбор фазы прерывает показ перехода, иначе таймер перебьёт выбор
 const selectedPhase = computed({
@@ -131,6 +141,7 @@ const settingsWrapper = computed(() =>
       :title="phaseTitle"
       :opponent-zone="phase === 'defense' ? opponentAttack.zone.value : null"
       :playing="playback.playing.value"
+      :overlap-lines="overlapLines"
       @play="playback.play()"
     />
 

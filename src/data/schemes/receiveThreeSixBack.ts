@@ -309,14 +309,16 @@ export const receiveThreeSixBack: Scheme = {
           L: { x: -0.8, y: 4.14 },
         },
       },
-      // приём подачи соперника
+      // приём подачи соперника: диагональному из зоны 5 достаточно быть левее Д2 из зоны 6
+      // и дальше от сетки, чем центральный, поэтому он прячется за Д2, чуть левее
+      // и ближе к правому краю, куда потом бежит на атаку
       receive: {
         bench: 'MB2',
         positions: {
           S: { x: 6, y: 2.5 },
           OH1: { x: 1.5, y: 7 },
           MB1: { x: 1.2, y: 3 },
-          OPP: { x: 0.6, y: 8.5 },
+          OPP: { x: 3.4, y: 8.3 },
           OH2: { x: 4, y: 7 },
           MB2: { x: -0.8, y: 4.14 },
           L: { x: 7.2, y: 6 },
@@ -563,22 +565,24 @@ export const receiveThreeSixBack: Scheme = {
           L: { x: -0.8, y: 4.14 },
         },
       },
-      // приём подачи соперника
+      // приём подачи соперника: Д2 уходит принимать в зону 5, центральный и связующий
+      // прячутся левее него у сетки, задняя линия сдвигается на одного: Д1 в зоне 6,
+      // либеро справа, диагональный за либеро
       receive: {
         bench: 'MB1',
         positions: {
-          S: { x: 1.3, y: 0.5 },
-          OH1: { x: 1.5, y: 7 },
+          S: { x: 0.5, y: 1 },
+          OH1: { x: 4.5, y: 6.5 },
           MB1: { x: -0.8, y: 4.14 },
-          OPP: { x: 8.5, y: 8 },
-          OH2: { x: 7.2, y: 6 },
-          MB2: { x: 2, y: 2.5 },
-          L: { x: 4.5, y: 7 },
+          OPP: { x: 8.3, y: 8.4 },
+          OH2: { x: 2, y: 6.2 },
+          MB2: { x: 1.2, y: 2 },
+          L: { x: 7.2, y: 6.5 },
         },
         zones: {
-          OH1: ZONES.stripLeft,
-          L: ZONES.stripLeftSeam,
-          OH2: [...ZONES.stripLeftFar, ...ZONES.stripLeftShortSide],
+          OH2: ZONES.stripLeft,
+          OH1: ZONES.stripLeftSeam,
+          L: [...ZONES.stripLeftFar, ...ZONES.stripLeftShortSide],
           MB2: ZONES.stripLeftShortCenter,
         },
       },
@@ -663,7 +667,7 @@ export const receiveThreeSixBack: Scheme = {
       receive: {
         bench: 'MB1',
         positions: {
-          S: { x: 0.9, y: 2.5 },
+          S: { x: 4, y: 2.5 },
           OH1: { x: 4.5, y: 7 },
           MB1: { x: -0.8, y: 4.14 },
           OPP: { x: 7.5, y: 3 },
